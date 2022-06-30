@@ -1,21 +1,33 @@
 package ru.job4j.chat.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.domain.Message;
 import ru.job4j.chat.domain.Person;
-import ru.job4j.chat.domain.Room;
 import ru.job4j.chat.repository.PersonRepository;
-import ru.job4j.chat.repository.RoomRepository;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/person")
 public class PersonController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PersonController.class.getSimpleName());
+
+    private final ObjectMapper objectMapper;
+
     @Autowired
     private RestTemplate rest;
 
@@ -25,13 +37,27 @@ public class PersonController {
 
     private final PersonRepository pr;
 
-    public PersonController(final PersonRepository pr) {
+    public PersonController(ObjectMapper objectMapper, final PersonRepository pr) {
+        this.objectMapper = objectMapper;
         this.pr = pr;
     }
 
     @GetMapping("/")
     public List<Person> findAll() {
         return (List<Person>) this.pr.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Person> findById(@PathVariable int id) {
+        if (id > 5) {
+            throw new IllegalArgumentException(
+                    "Invalid id. Id must be < 5.");
+        }
+        var person = this.pr.findById(id);
+        return new ResponseEntity<>(
+                person.orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Person is not found. Please, check id.")),
+                HttpStatus.OK);
     }
 
     @PostMapping("/")
@@ -76,5 +102,17 @@ public class PersonController {
         }
         rest.delete(API_ID, id);
         return ResponseEntity.ok().build();
+    }
+
+    @ExceptionHandler(value = {NumberFormatException.class})
+    public void exceptionHandler(Exception e, HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        response.setStatus(HttpStatus.BAD_REQUEST.value());
+        response.setContentType("application/json");
+        response.getWriter().write(objectMapper.writeValueAsString(new HashMap<>() { {
+            put("message", e.getMessage());
+            put("type", e.getClass());
+        }}));
+        LOGGER.error(e.getLocalizedMessage());
     }
 }

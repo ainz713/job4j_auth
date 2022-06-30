@@ -3,6 +3,7 @@ package ru.job4j.chat.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.domain.Message;
 import ru.job4j.chat.repository.MessageRepository;
 
@@ -25,10 +26,10 @@ public class MessageController {
     @GetMapping("/{id}")
     public ResponseEntity<Message> findById(@PathVariable int id) {
         var person = this.messageRepository.findById(id);
-        return new ResponseEntity<Message>(
-                person.orElse(new Message()),
-                person.isPresent() ? HttpStatus.OK : HttpStatus.NOT_FOUND
-        );
+        return new ResponseEntity<>(
+                person.orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Message is not found. Please, check id.")),
+                HttpStatus.OK);
     }
 
     @PostMapping("/")
