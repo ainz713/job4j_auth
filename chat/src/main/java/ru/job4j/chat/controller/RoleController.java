@@ -11,6 +11,7 @@ import ru.job4j.chat.domain.Person;
 import ru.job4j.chat.domain.Role;
 import ru.job4j.chat.repository.RoleRepository;
 
+import javax.validation.Valid;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -48,7 +49,7 @@ public class RoleController {
     }
 
     @PostMapping("/{id}")
-    public ResponseEntity<Person> create(@RequestBody Person person, @PathVariable int id) {
+    public ResponseEntity<Person> create(@Valid @RequestBody Person person, @PathVariable int id) {
         var em = this.roleRepository.findById(id);
         Person rsl = rest.postForObject(API, person, Person.class);
         if (em.isPresent()) {
@@ -63,7 +64,7 @@ public class RoleController {
     }
 
     @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Person person) {
+    public ResponseEntity<Void> update(@Valid @RequestBody Person person) {
         rest.put(API, person);
         return ResponseEntity.ok().build();
     }
@@ -83,7 +84,7 @@ public class RoleController {
     }
 
     @PatchMapping("/example2")
-    public Optional<Role> example2(@RequestBody Role role) throws InvocationTargetException,
+    public Optional<Role> example2(@Valid @RequestBody Role role) throws InvocationTargetException,
             IllegalAccessException {
         var current = roleRepository.findById(role.getId());
         var methods = current.getClass().getDeclaredMethods();

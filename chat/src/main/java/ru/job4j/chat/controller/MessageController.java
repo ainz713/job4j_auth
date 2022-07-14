@@ -8,6 +8,7 @@ import ru.job4j.chat.domain.Message;
 import ru.job4j.chat.domain.Person;
 import ru.job4j.chat.repository.MessageRepository;
 
+import javax.validation.Valid;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -38,7 +39,7 @@ public class MessageController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<Message> create(@RequestBody Message message) {
+    public ResponseEntity<Message> create(@Valid @RequestBody Message message) {
         return new ResponseEntity<Message>(
                 this.messageRepository.save(message),
                 HttpStatus.CREATED
@@ -46,13 +47,13 @@ public class MessageController {
     }
 
     @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Message message) {
+    public ResponseEntity<Void> update(@Valid @RequestBody Message message) {
         this.messageRepository.save(message);
         return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/example2")
-    public Optional<Message> example2(@RequestBody Message message) throws InvocationTargetException,
+    public Optional<Message> example2(@Valid @RequestBody Message message) throws InvocationTargetException,
             IllegalAccessException {
         var current = messageRepository.findById(message.getId());
         var methods = current.getClass().getDeclaredMethods();

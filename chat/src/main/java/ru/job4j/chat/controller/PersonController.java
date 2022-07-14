@@ -15,6 +15,7 @@ import ru.job4j.chat.repository.PersonRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -67,7 +68,7 @@ public class PersonController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<Message> create(@RequestBody Message message) {
+    public ResponseEntity<Message> create(@Valid @RequestBody Message message) {
         Message rsl = rest.postForObject(API, message, Message.class);
         return new ResponseEntity<>(
                 rsl,
@@ -76,7 +77,7 @@ public class PersonController {
     }
 
     @PostMapping("/{id}")
-    public ResponseEntity<Message> create(@RequestBody Message message, @PathVariable int id) {
+    public ResponseEntity<Message> create(@Valid @RequestBody Message message, @PathVariable int id) {
         var em = this.pr.findById(id);
         Message rsl = rest.postForObject(API, message, Message.class);
         if (em.isPresent()) {
@@ -91,7 +92,7 @@ public class PersonController {
     }
 
     @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Message message) {
+    public ResponseEntity<Void> update(@Valid @RequestBody Message message) {
         rest.put(API, message);
         return ResponseEntity.ok().build();
     }
@@ -111,7 +112,7 @@ public class PersonController {
     }
 
     @PatchMapping("/example2")
-    public Optional<Person> example2(@RequestBody Person person) throws InvocationTargetException,
+    public Optional<Person> example2(@Valid @RequestBody Person person) throws InvocationTargetException,
             IllegalAccessException {
         var current = pr.findById(person.getId());
         var methods = current.getClass().getDeclaredMethods();

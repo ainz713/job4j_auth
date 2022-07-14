@@ -1,6 +1,7 @@
 package ru.job4j.chat.domain;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -9,6 +10,7 @@ import java.util.*;
 public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @NotNull(message = "Id must be non null")
     private int id;
 
     private String text;

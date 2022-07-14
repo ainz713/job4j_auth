@@ -11,6 +11,7 @@ import ru.job4j.chat.domain.Role;
 import ru.job4j.chat.domain.Room;
 import ru.job4j.chat.repository.RoomRepository;
 
+import javax.validation.Valid;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -39,7 +40,7 @@ public class RoomController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<Message> create(@RequestBody Message message) {
+    public ResponseEntity<Message> create(@Valid @RequestBody Message message) {
         Message rsl = rest.postForObject(API, message, Message.class);
         return new ResponseEntity<>(
                 rsl,
@@ -48,7 +49,7 @@ public class RoomController {
     }
 
     @PostMapping("/{id}")
-    public ResponseEntity<Message> create(@RequestBody Message message, @PathVariable int id) {
+    public ResponseEntity<Message> create(@Valid @RequestBody Message message, @PathVariable int id) {
         var em = this.rr.findById(id);
         Message rsl = rest.postForObject(API, message, Message.class);
         if (em.isPresent()) {
@@ -63,7 +64,7 @@ public class RoomController {
     }
 
     @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Message message) {
+    public ResponseEntity<Void> update(@Valid @RequestBody Message message) {
         rest.put(API, message);
         return ResponseEntity.ok().build();
     }
@@ -83,7 +84,7 @@ public class RoomController {
     }
 
     @PatchMapping("/example2")
-    public Optional<Room> example2(@RequestBody Room room) throws InvocationTargetException,
+    public Optional<Room> example2(@Valid @RequestBody Room room) throws InvocationTargetException,
             IllegalAccessException {
         var current = rr.findById(room.getId());
         var methods = current.getClass().getDeclaredMethods();
