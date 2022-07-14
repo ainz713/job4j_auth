@@ -16,6 +16,8 @@ import ru.job4j.chat.repository.PersonRepository;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -106,6 +108,36 @@ public class PersonController {
         }
         rest.delete(API_ID, id);
         return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/example2")
+    public Optional<Person> example2(@RequestBody Person person) throws InvocationTargetException,
+            IllegalAccessException {
+        var current = pr.findById(person.getId());
+        var methods = current.getClass().getDeclaredMethods();
+        var namePerMethod = new HashMap<String, Method>();
+        for (var method: methods) {
+            var name = method.getName();
+            if (name.startsWith("get") || name.startsWith("set")) {
+                namePerMethod.put(name, method);
+            }
+        }
+        for (var name : namePerMethod.keySet()) {
+            if (name.startsWith("get")) {
+                var getMethod = namePerMethod.get(name);
+                var setMethod = namePerMethod.get(name.replace("get", "set"));
+                if (setMethod == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Impossible invoke set method from object : " + current + ", Check set and get pairs.");
+                }
+                var newValue = getMethod.invoke(person);
+                if (newValue != null) {
+                    setMethod.invoke(current, newValue);
+                }
+            }
+        }
+        pr.save(person);
+        return current;
     }
 
     @ExceptionHandler(value = {NumberFormatException.class})

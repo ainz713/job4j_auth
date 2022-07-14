@@ -5,11 +5,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.domain.Message;
+import ru.job4j.chat.domain.Role;
 import ru.job4j.chat.domain.Room;
 import ru.job4j.chat.repository.RoomRepository;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/room")
@@ -74,5 +80,35 @@ public class RoomController {
         }
         rest.delete(API_ID, id);
         return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/example2")
+    public Optional<Room> example2(@RequestBody Room room) throws InvocationTargetException,
+            IllegalAccessException {
+        var current = rr.findById(room.getId());
+        var methods = current.getClass().getDeclaredMethods();
+        var namePerMethod = new HashMap<String, Method>();
+        for (var method: methods) {
+            var name = method.getName();
+            if (name.startsWith("get") || name.startsWith("set")) {
+                namePerMethod.put(name, method);
+            }
+        }
+        for (var name : namePerMethod.keySet()) {
+            if (name.startsWith("get")) {
+                var getMethod = namePerMethod.get(name);
+                var setMethod = namePerMethod.get(name.replace("get", "set"));
+                if (setMethod == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Impossible invoke set method from object : " + current + ", Check set and get pairs.");
+                }
+                var newValue = getMethod.invoke(room);
+                if (newValue != null) {
+                    setMethod.invoke(current, newValue);
+                }
+            }
+        }
+        rr.save(room);
+        return current;
     }
 }
